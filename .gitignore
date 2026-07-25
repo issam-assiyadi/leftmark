@@ -15,9 +15,6 @@ dist/
 # Dependency directories (when using vendoring)
 vendor/
 
-# IDE/editor files
-.vscode/
-!.vscode/launch.json
 
 # Logs
 *.log
@@ -26,6 +23,8 @@ vendor/
 .DS_Store
 Thumbs.db
 
+# Local caches
+.cache/
 
 # Drafts folders
 drafts

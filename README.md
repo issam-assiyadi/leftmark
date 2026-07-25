@@ -43,3 +43,34 @@ Git-based sync can be valuable, but it should be treated as a workflow feature, 
 ## Roadmap
 
 The project EPICs live in [docs/epics.md](/Users/iassiyadi/Side-projects/notes.md/docs/epics.md).
+
+## Quality Checks
+
+This project uses standard Go quality tooling:
+
+- `gofmt` for formatting
+- `go vet` for baseline static analysis
+- `golangci-lint` for additional lint checks
+
+Install Go locally, and make sure `golangci-lint` is available in your shell.
+
+Run the checks from the repository root:
+
+```bash
+make fmt
+make vet
+make lint
+make check
+```
+
+`make check` validates formatting without rewriting files, then runs `go vet` and `golangci-lint`.
+
+GitHub Actions runs the same checks on pull requests and pushes to `main`.
+
+If you want Git to run checks before pushing, configure the repo-managed hooks once:
+
+```bash
+git config core.hooksPath scripts/git-hooks
+```
+
+The tracked `pre-push` hook runs `make fmt-check` before allowing a push.

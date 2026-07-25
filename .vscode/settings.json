@@ -1,0 +1,18 @@
+{
+  "go.useLanguageServer": true,
+  "go.lintTool": "golangci-lint",
+  "go.lintOnSave": "package",
+  "go.lintFlags": [
+    "--config=${workspaceFolder}/src/.golangci.yml",
+    "--path-mode=abs"
+  ],
+  "gopls": {
+    "formatting.gofumpt": false
+  },
+  "files.watcherExclude": {
+    "**/.cache/**": true
+  },
+  "search.exclude": {
+    "**/.cache": true
+  }
+}

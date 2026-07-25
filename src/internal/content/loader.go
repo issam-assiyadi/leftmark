@@ -29,7 +29,7 @@ func LoadPages(dir string) (Pages, error) {
 		return nil
 	})
 
-  if err != nil {
+	if err != nil {
 		return nil, err
 	}
 	return pages, nil
@@ -66,6 +66,6 @@ func normalizeTitle(fileBase string) string {
 		return "Untitled"
 	}
 	fileBase = strings.TrimSuffix(fileBase, ".md")
-	
+
 	return strings.ToUpper(fileBase[:1]) + fileBase[1:]
 }
