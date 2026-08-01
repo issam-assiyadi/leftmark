@@ -3,8 +3,8 @@ package app
 import (
 	"log"
 
-	"github.com/issam-assiyadi/leftmark/internal/app/components/scrollview"
 	"github.com/issam-assiyadi/leftmark/internal/content"
+	"github.com/issam-assiyadi/leftmark/internal/ui/components/scrollview"
 	"github.com/jroimartin/gocui"
 )
 
