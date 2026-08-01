@@ -17,7 +17,7 @@ jobs:
       - name: Set up Go
         uses: actions/setup-go@v5
         with:
-          go-version-file: src/go.mod
+          go-version-file: go.mod
 
       - name: Verify formatting
         run: make fmt-check
@@ -29,5 +29,7 @@ jobs:
         uses: golangci/golangci-lint-action@v6
         with:
           version: v2.11.3
-          working-directory: src
           args: --config .golangci.yml
+
+      - name: Run tests
+        run: make test
