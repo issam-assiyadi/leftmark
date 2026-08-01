@@ -32,14 +32,14 @@ type EditorLauncher interface {
 // is still located; Status/Archived are owned by the store and only change
 // through PromoteToDoing/ResolveDone.
 type TrackedRecord struct {
-	ID       string
-	Kind     domain.Kind
-	Status   domain.Status // doing | done
-	Text     string
-	File     string
-	Line     int
-	Archived bool
-	LastSeen time.Time
+	ID       string        `json:"id"`
+	Kind     domain.Kind   `json:"kind"`
+	Status   domain.Status `json:"status"` // doing | done
+	Text     string        `json:"text"`
+	File     string        `json:"file"`
+	Line     int           `json:"line"`
+	Archived bool          `json:"archived"`
+	LastSeen time.Time     `json:"last_seen"`
 }
 
 // Store loads and saves the full set of tracked records. Coarse-grained by
