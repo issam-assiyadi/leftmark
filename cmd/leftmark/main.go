@@ -2,20 +2,34 @@ package main
 
 import (
 	"log"
+	"os"
 
-	"github.com/issam-assiyadi/leftmark/internal/app"
-	"github.com/issam-assiyadi/leftmark/internal/content"
+	"github.com/issam-assiyadi/leftmark"
+	"github.com/issam-assiyadi/leftmark/internal/cliadapter"
+	"github.com/issam-assiyadi/leftmark/internal/ui"
 )
 
 func main() {
-	pages, err := content.LoadPages("./pages")
-	if err != nil {
-		log.Fatalf("load pages: %v", err)
+	if handled, code := cliadapter.Dispatch(os.Args[1:], os.Stdout, os.Stderr); handled {
+		os.Exit(code)
 	}
 
-	a := app.New(pages)
+	root, err := os.Getwd()
+	if err != nil {
+		log.Fatalf("getwd: %v", err)
+	}
+
+	svc, err := leftmark.New(root)
+	if err != nil {
+		log.Fatalf("leftmark: %v", err)
+	}
+
+	a, err := ui.New(svc)
+	if err != nil {
+		log.Fatalf("ui: %v", err)
+	}
 
 	if err := a.Run(); err != nil {
-		log.Fatalf("run app: %v", err)
+		log.Fatalf("run: %v", err)
 	}
 }
