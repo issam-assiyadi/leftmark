@@ -30,3 +30,6 @@ jobs:
         with:
           version: v2.11.3
           args: --config .golangci.yml
+
+      - name: Run tests
+        run: make test
