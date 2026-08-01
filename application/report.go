@@ -5,10 +5,10 @@ import "github.com/issam-assiyadi/leftmark/domain"
 // Summary counts the current snapshot by status and kind, and separately
 // flags tracked items that couldn't be located in the latest scan.
 type Summary struct {
-	Total     int
-	ByStatus  map[domain.Status]int
-	ByKind    map[domain.Kind]int
-	Unlocated int
+	Total     int                   `json:"total"`
+	ByStatus  map[domain.Status]int `json:"by_status"`
+	ByKind    map[domain.Kind]int   `json:"by_kind"`
+	Unlocated int                   `json:"unlocated"`
 }
 
 func (s *Service) Report() Summary {
