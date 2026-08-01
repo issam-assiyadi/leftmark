@@ -81,7 +81,7 @@ func (v *View) renderScrollbar(contentView, scrollView *gocui.View) error {
 		if i >= thumbTop && i < thumbTop+thumbHeight {
 			line = thumb
 		}
-		fmt.Fprintln(scrollView, line)
+		_, _ = fmt.Fprintln(scrollView, line)
 	}
 
 	return nil

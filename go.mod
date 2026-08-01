@@ -1,4 +1,4 @@
-module notesmd.com/cli
+module github.com/issam-assiyadi/leftmark
 
 go 1.23.0
 

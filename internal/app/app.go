@@ -3,9 +3,9 @@ package app
 import (
 	"log"
 
+	"github.com/issam-assiyadi/leftmark/internal/app/components/scrollview"
+	"github.com/issam-assiyadi/leftmark/internal/content"
 	"github.com/jroimartin/gocui"
-	"notesmd.com/cli/internal/app/components/scrollview"
-	"notesmd.com/cli/internal/content"
 )
 
 type App struct {
@@ -45,7 +45,9 @@ func (app *App) Run() error {
 		return app.Render(g)
 	})
 
-	app.BindKeys(g)
+	if err := app.BindKeys(g); err != nil {
+		return err
+	}
 
 	if _, err := g.SetCurrentView(app.SidebarView); err != nil {
 		log.Println("unable to set initial view:", err)

@@ -3,8 +3,8 @@ package app
 import (
 	"fmt"
 
+	"github.com/issam-assiyadi/leftmark/internal/markdown"
 	"github.com/jroimartin/gocui"
-	"notesmd.com/cli/internal/markdown"
 )
 
 func (a *App) Render(g *gocui.Gui) error {
@@ -21,12 +21,12 @@ func (a *App) Render(g *gocui.Gui) error {
 			prefix = "> "
 		}
 
-		fmt.Fprintf(sv, "%s%s\n", prefix, p.Title)
+		_, _ = fmt.Fprintf(sv, "%s%s\n", prefix, p.Title)
 	}
 
 	return a.Content.Render(g, func(v *gocui.View, contentWidth int) error {
 		if len(a.Pages) == 0 {
-			fmt.Fprintln(v, "No pages")
+			_, _ = fmt.Fprintln(v, "No pages")
 			return nil
 		}
 
@@ -38,11 +38,11 @@ func (a *App) Render(g *gocui.Gui) error {
 		// FIXME: I should investigate more in that, it seems like we do this in a wrong way.
 		rendered, err := markdown.Render(md, contentWidth)
 		if err != nil {
-			fmt.Fprint(v, md)
+			_, _ = fmt.Fprint(v, md)
 			return nil
 		}
 
-		fmt.Fprint(v, rendered)
+		_, _ = fmt.Fprint(v, rendered)
 		return nil
 	})
 }

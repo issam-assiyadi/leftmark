@@ -3,8 +3,8 @@ package main
 import (
 	"log"
 
-	"notesmd.com/cli/internal/app"
-	"notesmd.com/cli/internal/content"
+	"github.com/issam-assiyadi/leftmark/internal/app"
+	"github.com/issam-assiyadi/leftmark/internal/content"
 )
 
 func main() {

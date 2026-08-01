@@ -3,7 +3,7 @@
   "go.lintTool": "golangci-lint",
   "go.lintOnSave": "package",
   "go.lintFlags": [
-    "--config=${workspaceFolder}/src/.golangci.yml",
+    "--config=${workspaceFolder}/.golangci.yml",
     "--path-mode=abs"
   ],
   "gopls": {
@@ -14,5 +14,6 @@
   },
   "search.exclude": {
     "**/.cache": true
-  }
+  },
+  "makefile.configureOnOpen": false
 }

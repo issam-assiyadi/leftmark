@@ -1,6 +1,6 @@
 .PHONY: fmt fmt-check vet lint check
 
-GOFILES := $(shell find src -type f -name '*.go')
+GOFILES := $(shell find . -type f -name '*.go' -not -path './.cache/*')
 CACHE_DIR := $(CURDIR)/.cache
 GO_CACHE := $(CACHE_DIR)/go-build
 GOLANGCI_LINT_CACHE := $(CACHE_DIR)/golangci-lint
