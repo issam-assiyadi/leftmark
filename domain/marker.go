@@ -1,14 +1,10 @@
 package domain
 
 import (
-	"fmt"
-	"regexp"
 	"strings"
 )
 
 var markerKinds = []Kind{KindTODO, KindFIXME, KindNOTE, KindQUESTION}
-
-var tagPattern = regexp.MustCompile(`\[(lm-[0-9a-z]+)\]`)
 
 // DetectMarker reports whether line contains a comment (per syntax) whose
 // body starts with one of the recognized marker keywords. rest is everything
@@ -74,20 +70,4 @@ func commentBodyStart(line string, syntax CommentSyntax) (int, bool) {
 		return 0, false
 	}
 	return best + bestLen, true
-}
-
-// FormatTag renders the canonical bracket form appended to a tagged marker,
-// e.g. "[lm-a1b2c3]". The tag carries only identity, never status — status
-// lives in the external metadata store, not the source file.
-func FormatTag(id string) string {
-	return fmt.Sprintf("[%s]", id)
-}
-
-// ParseTag extracts the id from a line that already carries a tag.
-func ParseTag(line string) (id string, ok bool) {
-	m := tagPattern.FindStringSubmatch(line)
-	if m == nil {
-		return "", false
-	}
-	return m[1], true
 }
