@@ -19,10 +19,7 @@ func main() {
 		log.Fatalf("getwd: %v", err)
 	}
 
-	svc, err := leftmark.New(root)
-	if err != nil {
-		log.Fatalf("leftmark: %v", err)
-	}
+	svc := leftmark.New(root)
 
 	a, err := ui.New(svc)
 	if err != nil {

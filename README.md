@@ -1,42 +1,41 @@
 # leftmark
 
-`leftmark` is a tracker for the TODOs, FIXMEs, notes, and questions you already leave in your codebase.
+`leftmark` is a scanner for the TODOs, FIXMEs, notes, and questions you already leave in your codebase.
 
-## Core Idea
+## Core idea
 
-Every developer already writes notes while they work — they just write them as comments. A `TODO` scribbled next to a hacky fix, a `FIXME` on code that isn't quite right yet, a `QUESTION` for something to double-check later. That's a real backlog, but it's invisible: scattered across files, easy to forget, impossible to browse or prioritize.
+Every developer already writes notes while they work, they just write them as comments. A `TODO` scribbled next to a hacky fix, a `FIXME` on code that isn't quite right yet, a `QUESTION` for something to double-check later. That's a real backlog, but it's invisible: scattered across files, easy to forget, impossible to browse.
 
-The goal of `leftmark` is not to give you another place to write notes. It's the opposite: stop maintaining a separate notes app, and treat your codebase as the draft it already is. Write your thinking where the code lives. `leftmark` scans it, tracks it, and gives you a dashboard to browse, filter, and manage it — without changing how you write comments.
+The goal of `leftmark` is not to give you another place to write notes. It's the opposite. Stop maintaining a separate notes app, and treat your codebase as the draft it already is. Write your thinking where the code lives. `leftmark` scans it and gives you a dashboard to browse it, without changing how you write comments.
 
 In short:
 
 - your codebase is the draft
 - comments are the capture mechanism, not a separate notes file
-- this app is where you review, triage, and track the marks you've left behind
+- this app is where you browse and report on the marks you've left behind
 
-`leftmark` is the scan/track/report engine plus a set of presentation layers on top of it. The first client is a terminal app, but the engine is built so a VS Code extension, an editor plugin, or other front-ends can be added later without changing how items are scanned or tracked.
+`leftmark` is the scan/report engine plus a set of presentation layers on top of it. The first client is a terminal app, but the engine is built so a VS Code extension, an editor plugin, or other front-ends can be added later without changing how items are scanned.
 
 ## How it works
 
-1. **Scan** — `leftmark` walks your project (respecting `.gitignore`) looking for `TODO`, `FIXME`, `NOTE`, and `QUESTION` comments, in any language.
-2. **Track** — the first time a marker is found, a short ID and status (`open`) are appended directly into the comment itself, e.g. `// TODO: fix this [lm-a1b2c3 open]`. No external database — the status lives with the code, so it survives edits and refactors.
-3. **Manage** — a dashboard lists every tracked item, filterable by kind or status, letting you cycle status (`open` → `doing` → `done`), jump straight to the file and line in your editor, and rescan on demand. The first dashboard is a terminal app; other front-ends can present the same tracked items later.
-4. **Report** — an optional, informational-only git hook prints a summary of open items at commit or push time — never blocking, just a nudge.
+1. **Scan.** `leftmark` walks your project (respecting `.gitignore`) looking for `TODO`, `FIXME`, `NOTE`, and `QUESTION` comments, in any language. Every scan is fresh: nothing is written back to your source and nothing persists between runs.
+2. **Browse.** A dashboard lists everything the last scan found, lets you move through items, jump straight to the file and line in your editor, and rescan on demand. The first dashboard is a terminal app; other front-ends can present the same scanned items later.
+3. **Report.** An optional, informational-only git hook prints a count of items by kind at commit or push time. It never blocks, it's just a nudge.
 
-## Product Direction
+## Product direction
 
-- a fixed, opinionated marker vocabulary to start (`TODO`, `FIXME`, `NOTE`, `QUESTION`) — not user-configurable yet
-- no separate persistence layer for status — the source file is the single source of truth
+- a fixed, opinionated marker vocabulary to start (`TODO`, `FIXME`, `NOTE`, `QUESTION`), not user-configurable yet
+- no persistence layer: the source tree is scanned fresh every time, there's nothing external to keep in sync
 - multi-language support via a lightweight comment-syntax table, not a full parser per language
 - git hooks are informational by default; blocking/enforcement modes are a later, opt-in step
-- editing still happens in the user's own editor — `leftmark` opens `$EDITOR` at the right file:line, it doesn't try to be one
-- the scan/track/report engine is kept independent of any single presentation layer, so the terminal app, and any front-end added later, are just clients built on top of it
+- editing still happens in the user's own editor: `leftmark` opens `$EDITOR` at the right file:line, it doesn't try to be one
+- the scan/report engine is kept independent of any single presentation layer, so the terminal app, and any front-end added later, are just clients built on top of it
 
 ## Roadmap
 
-The project EPICs live in [docs/epics.md](/Users/iassiyadi/Side-projects/notes.md/docs/epics.md). This document predates the pivot above and needs a rewrite to match — treat it as historical until then.
+The project EPICs live in [docs/epics.md](/Users/iassiyadi/Side-projects/notes.md/docs/epics.md). This document predates the pivot above and needs a rewrite to match; treat it as historical until then.
 
-## Quality Checks
+## Quality checks
 
 This project uses standard Go quality tooling:
 

@@ -10,13 +10,9 @@ import (
 )
 
 var subcommands = map[string]func(args []string, stdout, stderr io.Writer) int{
-	"scan":    runScan,
-	"list":    runList,
-	"promote": runPromote,
-	"resolve": runResolve,
-	"open":    runOpen,
-	"report":  runReport,
-	"hook":    runHook,
+	"scan":   runScan,
+	"report": runReport,
+	"hook":   runHook,
 }
 
 // Dispatch routes a known subcommand (args[0]) to its handler and reports

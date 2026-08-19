@@ -14,20 +14,11 @@ type App struct {
 
 	Items    []domain.Item
 	Selected int
-	Filter   domain.Filter
 
 	SidebarView string
 	Content     *scrollview.View
 
-	pending     *pendingResolve
 	pendingEdit *domain.Item
-}
-
-// pendingResolve tracks a done-or-delete confirmation waiting on a y/n
-// keypress; it blocks nothing else in the UI, it's just state read by
-// Render and the y/n/esc keybindings.
-type pendingResolve struct {
-	item domain.Item
 }
 
 func New(svc *application.Service) (*App, error) {
@@ -41,19 +32,19 @@ func New(svc *application.Service) (*App, error) {
 		}),
 	}
 
-	if _, err := svc.Scan(); err != nil {
+	items, err := svc.Scan()
+	if err != nil {
 		return nil, err
 	}
-	a.refresh()
+	a.setItems(items)
 
 	return a, nil
 }
 
-// refresh re-reads the service's current snapshot through the active
-// filter. Call after any Scan/PromoteToDoing/ResolveDone, all of which
-// already update the service's own snapshot.
-func (a *App) refresh() {
-	a.Items = a.Service.List(a.Filter)
+// setItems replaces the displayed items and clamps the current selection to
+// stay within bounds.
+func (a *App) setItems(items []domain.Item) {
+	a.Items = items
 	if a.Selected >= len(a.Items) {
 		a.Selected = len(a.Items) - 1
 	}
