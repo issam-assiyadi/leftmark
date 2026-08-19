@@ -21,8 +21,8 @@
 ## Insights
 
 <!-- Tradeoffs, risks, or context a reviewer needs.
-     Flag any change to marker grammar, ID format, or status vocabulary —
-     existing `[lm-a1b2c3 open]` markers in already-scanned files must still parse. -->
+     Flag any change to marker grammar — the `TODO`/`FIXME`/`NOTE`/`QUESTION`
+     vocabulary or how comments are detected. -->
 
 ## Demo
 

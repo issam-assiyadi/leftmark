@@ -31,10 +31,6 @@ In short:
 - editing still happens in the user's own editor: `leftmark` opens `$EDITOR` at the right file:line, it doesn't try to be one
 - the scan/report engine is kept independent of any single presentation layer, so the terminal app, and any front-end added later, are just clients built on top of it
 
-## Roadmap
-
-The project EPICs live in [docs/epics.md](/Users/iassiyadi/Side-projects/notes.md/docs/epics.md). This document predates the pivot above and needs a rewrite to match; treat it as historical until then.
-
 ## Quality checks
 
 This project uses standard Go quality tooling:
