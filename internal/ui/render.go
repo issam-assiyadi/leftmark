@@ -32,7 +32,12 @@ func (a *App) Render(g *gocui.Gui) error {
 		return err
 	}
 
-	return a.Content.Render(g, func(v *gocui.View, contentWidth int) error {
+	focus := a.ItemSelected
+	if len(items) == 0 {
+		focus = -1
+	}
+
+	return a.Content.Render(g, focus, func(v *gocui.View, contentWidth int) error {
 		if len(items) == 0 {
 			_, _ = fmt.Fprintln(v, "No items in this category")
 			return nil
