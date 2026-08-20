@@ -7,26 +7,60 @@ import (
 )
 
 func (a *App) BindKeys(g *gocui.Gui) error {
-	bindings := []struct {
+	global := []struct {
 		key interface{}
 		fn  func(*gocui.Gui, *gocui.View) error
 	}{
 		{gocui.KeyCtrlC, quit},
 		{'q', quit},
-		{gocui.KeyArrowDown, a.moveDown},
-		{'j', a.moveDown},
-		{gocui.KeyArrowUp, a.moveUp},
-		{'k', a.moveUp},
-		{gocui.KeyEnter, a.openSelectedInEditor},
-		{'o', a.openSelectedInEditor},
 		{'r', a.rescan},
+		{'1', a.focusCategories},
+		{'2', a.focusItems},
 	}
-
-	for _, b := range bindings {
+	for _, b := range global {
 		if err := g.SetKeybinding("", b.key, gocui.ModNone, b.fn); err != nil {
 			return err
 		}
 	}
+
+	categoryKeys := []struct {
+		key interface{}
+		fn  func(*gocui.Gui, *gocui.View) error
+	}{
+		{gocui.KeyArrowDown, a.categoryMoveDown},
+		{'j', a.categoryMoveDown},
+		{gocui.KeyArrowUp, a.categoryMoveUp},
+		{'k', a.categoryMoveUp},
+		{gocui.MouseLeft, a.focusCategories},
+	}
+	for _, b := range categoryKeys {
+		if err := g.SetKeybinding(a.CategoriesView, b.key, gocui.ModNone, b.fn); err != nil {
+			return err
+		}
+	}
+
+	itemKeys := []struct {
+		key interface{}
+		fn  func(*gocui.Gui, *gocui.View) error
+	}{
+		{gocui.KeyArrowDown, a.itemMoveDown},
+		{'j', a.itemMoveDown},
+		{gocui.KeyArrowUp, a.itemMoveUp},
+		{'k', a.itemMoveUp},
+		{gocui.KeyEnter, a.openSelectedInEditor},
+		{'o', a.openSelectedInEditor},
+	}
+	for _, viewname := range []string{a.Content.WrapperName(), a.Content.ContentViewName(), a.Content.ScrollViewName()} {
+		if err := g.SetKeybinding(viewname, gocui.MouseLeft, gocui.ModNone, a.focusItems); err != nil {
+			return err
+		}
+	}
+	for _, b := range itemKeys {
+		if err := g.SetKeybinding(a.Content.WrapperName(), b.key, gocui.ModNone, b.fn); err != nil {
+			return err
+		}
+	}
+
 	return nil
 }
 
@@ -34,16 +68,44 @@ func quit(g *gocui.Gui, v *gocui.View) error {
 	return gocui.ErrQuit
 }
 
-func (a *App) moveDown(g *gocui.Gui, v *gocui.View) error {
-	if a.Selected < len(a.Items)-1 {
-		a.Selected++
+func (a *App) focusCategories(g *gocui.Gui, v *gocui.View) error {
+	a.focused = a.CategoriesView
+	_, err := g.SetCurrentView(a.focused)
+	return err
+}
+
+func (a *App) focusItems(g *gocui.Gui, v *gocui.View) error {
+	a.focused = a.Content.WrapperName()
+	_, err := g.SetCurrentView(a.focused)
+	return err
+}
+
+func (a *App) categoryMoveDown(g *gocui.Gui, v *gocui.View) error {
+	if a.CategorySelected < len(categoryOrder)-1 {
+		a.CategorySelected++
+		a.ItemSelected = 0
 	}
 	return nil
 }
 
-func (a *App) moveUp(g *gocui.Gui, v *gocui.View) error {
-	if a.Selected > 0 {
-		a.Selected--
+func (a *App) categoryMoveUp(g *gocui.Gui, v *gocui.View) error {
+	if a.CategorySelected > 0 {
+		a.CategorySelected--
+		a.ItemSelected = 0
+	}
+	return nil
+}
+
+func (a *App) itemMoveDown(g *gocui.Gui, v *gocui.View) error {
+	if a.ItemSelected < len(a.currentCategoryItems())-1 {
+		a.ItemSelected++
+	}
+	return nil
+}
+
+func (a *App) itemMoveUp(g *gocui.Gui, v *gocui.View) error {
+	if a.ItemSelected > 0 {
+		a.ItemSelected--
 	}
 	return nil
 }

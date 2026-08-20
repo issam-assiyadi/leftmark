@@ -9,28 +9,36 @@ import (
 	"github.com/issam-assiyadi/leftmark/internal/ui/components/scrollview"
 )
 
+var categoryOrder = []domain.Kind{domain.KindTODO, domain.KindFIXME, domain.KindNOTE, domain.KindQUESTION}
+
 type App struct {
 	Service *application.Service
 
-	Items    []domain.Item
-	Selected int
+	Items           []domain.Item
+	itemsByCategory map[domain.Kind][]domain.Item
 
-	SidebarView string
-	Content     *scrollview.View
+	CategorySelected int
+	ItemSelected     int
+
+	CategoriesView string
+	Content        *scrollview.View
+
+	focused string
 
 	pendingEdit *domain.Item
 }
 
 func New(svc *application.Service) (*App, error) {
 	a := &App{
-		Service:     svc,
-		SidebarView: "sidebar",
+		Service:        svc,
+		CategoriesView: "categories",
 		Content: scrollview.New(scrollview.Config{
 			BaseName:       "content",
-			Title:          "Detail",
+			Title:          " [2] Items ",
 			ScrollbarWidth: 3,
 		}),
 	}
+	a.focused = a.CategoriesView
 
 	items, err := svc.Scan()
 	if err != nil {
@@ -41,21 +49,42 @@ func New(svc *application.Service) (*App, error) {
 	return a, nil
 }
 
-// setItems replaces the displayed items and clamps the current selection to
-// stay within bounds.
 func (a *App) setItems(items []domain.Item) {
 	a.Items = items
-	if a.Selected >= len(a.Items) {
-		a.Selected = len(a.Items) - 1
+
+	a.itemsByCategory = make(map[domain.Kind][]domain.Item, len(categoryOrder))
+	for _, item := range items {
+		a.itemsByCategory[item.Kind] = append(a.itemsByCategory[item.Kind], item)
 	}
-	if a.Selected < 0 {
-		a.Selected = 0
+
+	if a.CategorySelected < 0 {
+		a.CategorySelected = 0
+	}
+	if a.CategorySelected >= len(categoryOrder) {
+		a.CategorySelected = len(categoryOrder) - 1
+	}
+
+	n := len(a.currentCategoryItems())
+	if a.ItemSelected >= n {
+		a.ItemSelected = n - 1
+	}
+	if a.ItemSelected < 0 {
+		a.ItemSelected = 0
 	}
 }
 
+func (a *App) currentCategory() domain.Kind {
+	return categoryOrder[a.CategorySelected]
+}
+
+func (a *App) currentCategoryItems() []domain.Item {
+	return a.itemsByCategory[a.currentCategory()]
+}
+
 func (a *App) selectedItem() (domain.Item, bool) {
-	if a.Selected < 0 || a.Selected >= len(a.Items) {
+	items := a.currentCategoryItems()
+	if a.ItemSelected < 0 || a.ItemSelected >= len(items) {
 		return domain.Item{}, false
 	}
-	return a.Items[a.Selected], true
+	return items[a.ItemSelected], true
 }

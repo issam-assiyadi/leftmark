@@ -22,15 +22,17 @@ func (a *App) layout(g *gocui.Gui) error {
 		sidebarWidth = 2
 	}
 
-	sv, err := g.SetView(a.SidebarView, 0, 0, sidebarWidth-1, maxY-1)
+	sv, err := g.SetView(a.CategoriesView, 0, 0, sidebarWidth-1, maxY-1)
 	if err != nil && err != gocui.ErrUnknownView {
 		return err
 	}
 	if err == gocui.ErrUnknownView {
-		sv.Title = "Items"
-		sv.Highlight = true
-		sv.SelBgColor = gocui.ColorGreen
-		sv.Wrap = true
+		sv.Title = " [1] Categories "
+		// Rows are hand-formatted to exactly fill the view's width (see
+		// formatCategoryRow), so wrapping is unwanted here: gocui treats an
+		// exactly-full line as wrapping, inserting a blank continuation line
+		// before the row's own "\n".
+		sv.Wrap = false
 	}
 
 	contentLeft := sidebarWidth

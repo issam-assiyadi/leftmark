@@ -28,3 +28,9 @@ func New(cfg Config) *View {
 		scrollbarWidth:  scrollbarWidth,
 	}
 }
+
+func (v *View) WrapperName() string { return v.wrapperViewName }
+
+func (v *View) ContentViewName() string { return v.contentViewName }
+
+func (v *View) ScrollViewName() string { return v.scrollViewName }
