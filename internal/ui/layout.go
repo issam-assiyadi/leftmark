@@ -28,10 +28,6 @@ func (a *App) layout(g *gocui.Gui) error {
 	}
 	if err == gocui.ErrUnknownView {
 		sv.Title = " [1] Categories "
-		// Rows are hand-formatted to exactly fill the view's width (see
-		// formatCategoryRow), so wrapping is unwanted here: gocui treats an
-		// exactly-full line as wrapping, inserting a blank continuation line
-		// before the row's own "\n".
 		sv.Wrap = false
 	}
 

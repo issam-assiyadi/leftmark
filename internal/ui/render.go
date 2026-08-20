@@ -17,7 +17,7 @@ func (a *App) Render(g *gocui.Gui) error {
 	cv.Clear()
 
 	cvWidth, _ := cv.Size()
-	rowWidth := cvWidth - len("  ") // prefix is always 2 columns, even when unselected
+	rowWidth := cvWidth - len("  ")
 	for i, kind := range categoryOrder {
 		prefix := "  "
 		if i == a.CategorySelected {
@@ -52,20 +52,14 @@ func renderItemRow(item domain.Item) string {
 	return fmt.Sprintf("%s:%d %s", item.File, item.Line, item.Text)
 }
 
-// categoryMetaRightPad keeps the item count from sitting flush against the
-// view's right border.
 const categoryMetaRightPad = 1
 
-// formatCategoryRow lays out a category name against its item count so the
-// count always lands near the row's right edge, truncating the name with
-// "..." rather than letting a long name push the count off-screen or wrap it
-// onto its own line.
 func formatCategoryRow(width int, kind domain.Kind, count int) string {
 	meta := fmt.Sprintf("%d", count)
 	title := string(kind)
 
 	metaWidth := len(meta) + categoryMetaRightPad
-	avail := width - metaWidth - 1 // 1 column gap between title and meta
+	avail := width - metaWidth - 1
 	if avail < 0 {
 		avail = 0
 	}
