@@ -10,21 +10,19 @@ import (
 )
 
 func (a *App) Render(g *gocui.Gui) error {
-	cv, err := g.View(a.CategoriesView)
-	if err != nil {
-		return err
-	}
-	cv.Clear()
-
-	cvWidth, _ := cv.Size()
-	rowWidth := cvWidth - len("  ")
-	for i, kind := range categoryOrder {
-		prefix := "  "
-		if i == a.CategorySelected {
-			prefix = "> "
+	if err := a.Categories.Render(g, a.CategorySelected, func(v *gocui.View, contentWidth int) error {
+		rowWidth := contentWidth - len("  ")
+		for i, kind := range categoryOrder {
+			prefix := "  "
+			if i == a.CategorySelected {
+				prefix = "> "
+			}
+			count := len(a.itemsByCategory[kind])
+			_, _ = fmt.Fprintln(v, prefix+formatCategoryRow(rowWidth, kind, count))
 		}
-		count := len(a.itemsByCategory[kind])
-		_, _ = fmt.Fprintln(cv, prefix+formatCategoryRow(rowWidth, kind, count))
+		return nil
+	}); err != nil {
+		return err
 	}
 
 	items := a.currentCategoryItems()

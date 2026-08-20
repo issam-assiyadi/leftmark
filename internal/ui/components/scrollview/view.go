@@ -4,6 +4,9 @@ type Config struct {
 	BaseName       string
 	Title          string
 	ScrollbarWidth int
+	// HideScrollbar makes the view scrollable via keyboard/selection
+	// without ever drawing a scrollbar column.
+	HideScrollbar bool
 }
 
 type View struct {
@@ -12,12 +15,16 @@ type View struct {
 	scrollViewName  string
 	title           string
 	scrollbarWidth  int
+	hideScrollbar   bool
 }
 
 func New(cfg Config) *View {
 	scrollbarWidth := cfg.ScrollbarWidth
-	if scrollbarWidth < 2 {
+	if !cfg.HideScrollbar && scrollbarWidth < 2 {
 		scrollbarWidth = 2
+	}
+	if cfg.HideScrollbar {
+		scrollbarWidth = 0
 	}
 
 	return &View{
@@ -26,6 +33,7 @@ func New(cfg Config) *View {
 		scrollViewName:  cfg.BaseName + "-scroll",
 		title:           cfg.Title,
 		scrollbarWidth:  scrollbarWidth,
+		hideScrollbar:   cfg.HideScrollbar,
 	}
 }
 

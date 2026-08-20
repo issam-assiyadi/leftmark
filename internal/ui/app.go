@@ -20,8 +20,8 @@ type App struct {
 	CategorySelected int
 	ItemSelected     int
 
-	CategoriesView string
-	Content        *scrollview.View
+	Categories *scrollview.View
+	Content    *scrollview.View
 
 	focused string
 
@@ -30,15 +30,19 @@ type App struct {
 
 func New(svc *application.Service) (*App, error) {
 	a := &App{
-		Service:        svc,
-		CategoriesView: "categories",
+		Service: svc,
+		Categories: scrollview.New(scrollview.Config{
+			BaseName:      "categories",
+			Title:         " [1] Categories ",
+			HideScrollbar: true,
+		}),
 		Content: scrollview.New(scrollview.Config{
 			BaseName:       "content",
 			Title:          " [2] Items ",
 			ScrollbarWidth: 3,
 		}),
 	}
-	a.focused = a.CategoriesView
+	a.focused = a.Categories.WrapperName()
 
 	items, err := svc.Scan()
 	if err != nil {

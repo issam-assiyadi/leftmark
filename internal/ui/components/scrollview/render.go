@@ -34,15 +34,17 @@ func (v *View) Render(g *gocui.Gui, focus int, renderFn func(*gocui.View, int) e
 	}
 
 	scrollView, err := v.scrollView(g)
-	if err != nil || scrollView == nil {
+	if err != nil {
 		return err
 	}
 
 	contentView.Clear()
-	scrollView.Clear()
 
-	if err := scrollView.SetOrigin(0, 0); err != nil {
-		return err
+	if scrollView != nil {
+		scrollView.Clear()
+		if err := scrollView.SetOrigin(0, 0); err != nil {
+			return err
+		}
 	}
 
 	if renderFn != nil {
@@ -53,6 +55,10 @@ func (v *View) Render(g *gocui.Gui, focus int, renderFn func(*gocui.View, int) e
 
 	if err := v.ensureVisible(contentView, focus); err != nil {
 		return err
+	}
+
+	if scrollView == nil {
+		return nil
 	}
 
 	return v.renderScrollbar(contentView, scrollView)

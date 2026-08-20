@@ -22,13 +22,8 @@ func (a *App) layout(g *gocui.Gui) error {
 		sidebarWidth = 2
 	}
 
-	sv, err := g.SetView(a.CategoriesView, 0, 0, sidebarWidth-1, maxY-1)
-	if err != nil && err != gocui.ErrUnknownView {
+	if err := a.Categories.Layout(g, 0, 0, sidebarWidth-1, maxY-1); err != nil {
 		return err
-	}
-	if err == gocui.ErrUnknownView {
-		sv.Title = " [1] Categories "
-		sv.Wrap = false
 	}
 
 	contentLeft := sidebarWidth

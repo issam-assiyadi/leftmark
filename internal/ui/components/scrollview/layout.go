@@ -20,17 +20,14 @@ func (v *View) Layout(g *gocui.Gui, x0, y0, x1, y1 int) error {
 
 	contentLeft := x0 + 1
 	contentTop := y0
-	contentRight := x1 - v.scrollbarWidth - 1
 	contentBottom := y1 - 1
-	scrollLeft := x1 - v.scrollbarWidth + 1
-	scrollTop := y0
-	scrollRight := x1
-	scrollBottom := y1
+
+	contentRight := x1 - 1
+	if !v.hideScrollbar {
+		contentRight = x1 - v.scrollbarWidth - 1
+	}
 
 	if contentLeft >= contentRight || contentTop >= contentBottom {
-		return nil
-	}
-	if scrollLeft >= scrollRight || scrollTop >= scrollBottom {
 		return nil
 	}
 
@@ -42,6 +39,19 @@ func (v *View) Layout(g *gocui.Gui, x0, y0, x1, y1 int) error {
 		contentView.Frame = false
 		contentView.Wrap = false
 		contentView.Autoscroll = false
+	}
+
+	if v.hideScrollbar {
+		return nil
+	}
+
+	scrollLeft := x1 - v.scrollbarWidth + 1
+	scrollTop := y0
+	scrollRight := x1
+	scrollBottom := y1
+
+	if scrollLeft >= scrollRight || scrollTop >= scrollBottom {
+		return nil
 	}
 
 	scrollView, err := g.SetView(v.scrollViewName, scrollLeft, scrollTop, scrollRight, scrollBottom)
