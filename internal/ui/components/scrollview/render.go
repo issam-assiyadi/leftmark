@@ -6,6 +6,23 @@ import (
 	"github.com/jroimartin/gocui"
 )
 
+func (v *View) SetTitle(g *gocui.Gui, title string) error {
+	if v == nil || g == nil {
+		return nil
+	}
+
+	wrapper, err := g.View(v.wrapperViewName)
+	if err != nil {
+		if err == gocui.ErrUnknownView {
+			return nil
+		}
+		return err
+	}
+
+	wrapper.Title = title
+	return nil
+}
+
 func (v *View) Render(g *gocui.Gui, renderFn func(*gocui.View, int) error) error {
 	if v == nil || g == nil {
 		return nil

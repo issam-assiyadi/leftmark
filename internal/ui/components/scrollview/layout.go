@@ -19,7 +19,11 @@ func (v *View) Layout(g *gocui.Gui, x0, y0, x1, y1 int) error {
 	}
 
 	contentLeft := x0 + 1
-	contentTop := y0 + 1
+	// gocui always insets a view's drawable area by 1 cell from its own
+	// rect, regardless of Frame (see View.setRune), so starting this rect at
+	// y0+1 would double that inset and push line 0 a row lower than the
+	// categories pane's line 0. Starting at y0 lines the two panes up.
+	contentTop := y0
 	contentRight := x1 - v.scrollbarWidth - 1
 	contentBottom := y1 - 1
 	scrollLeft := x1 - v.scrollbarWidth + 1
