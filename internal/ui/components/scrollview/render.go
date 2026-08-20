@@ -78,10 +78,11 @@ func (v *View) renderScrollbar(contentView, scrollView *gocui.View) error {
 		}
 	}
 
-	thumbHeight := scrollHeight
-	if lines > height {
-		thumbHeight = max(1, scrollHeight*height/lines)
+	if lines <= height {
+		return nil
 	}
+
+	thumbHeight := max(1, scrollHeight*height/lines)
 	if thumbHeight > scrollHeight {
 		thumbHeight = scrollHeight
 	}
