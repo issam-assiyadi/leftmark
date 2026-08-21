@@ -1,6 +1,7 @@
 package ui
 
 import (
+	"errors"
 	"os"
 	"path/filepath"
 	"testing"
@@ -83,7 +84,7 @@ func TestCategoryMoveUpDownClampToCategoryBounds(t *testing.T) {
 	}
 }
 
-func TestItemMoveUpDownClampToItemBounds(t *testing.T) {
+func TestRowMoveUpDownClampToRowBounds(t *testing.T) {
 	dir := t.TempDir()
 	mainGo := filepath.Join(dir, "main.go")
 	content := "// TODO: one\n// TODO: two\n// TODO: three\n"
@@ -92,25 +93,25 @@ func TestItemMoveUpDownClampToItemBounds(t *testing.T) {
 	}
 
 	app := newTestApp(t, dir)
-	items := app.currentCategoryItems()
-	if len(items) != 3 {
-		t.Fatalf("currentCategoryItems = %+v, want 3", items)
+	rows := app.visibleRows()
+	if len(rows) != 4 {
+		t.Fatalf("visibleRows = %+v, want 4 (1 file header + 3 items)", rows)
 	}
 
-	if err := app.itemMoveUp(nil, nil); err != nil {
-		t.Fatalf("itemMoveUp: %v", err)
+	if err := app.rowMoveUp(nil, nil); err != nil {
+		t.Fatalf("rowMoveUp: %v", err)
 	}
-	if app.ItemSelected != 0 {
-		t.Errorf("ItemSelected = %d after itemMoveUp at top, want clamped to 0", app.ItemSelected)
+	if app.RowSelected != 0 {
+		t.Errorf("RowSelected = %d after rowMoveUp at top, want clamped to 0", app.RowSelected)
 	}
 
 	for i := 0; i < 5; i++ {
-		if err := app.itemMoveDown(nil, nil); err != nil {
-			t.Fatalf("itemMoveDown: %v", err)
+		if err := app.rowMoveDown(nil, nil); err != nil {
+			t.Fatalf("rowMoveDown: %v", err)
 		}
 	}
-	if app.ItemSelected != len(items)-1 {
-		t.Errorf("ItemSelected = %d after moving past the end, want clamped to %d", app.ItemSelected, len(items)-1)
+	if app.RowSelected != len(rows)-1 {
+		t.Errorf("RowSelected = %d after moving past the end, want clamped to %d", app.RowSelected, len(rows)-1)
 	}
 }
 
@@ -122,17 +123,127 @@ func TestCategoryMoveResetsItemSelection(t *testing.T) {
 	}
 
 	app := newTestApp(t, dir)
-	if err := app.itemMoveDown(nil, nil); err != nil {
-		t.Fatalf("itemMoveDown: %v", err)
+	if err := app.rowMoveDown(nil, nil); err != nil {
+		t.Fatalf("rowMoveDown: %v", err)
 	}
-	if app.ItemSelected != 1 {
-		t.Fatalf("ItemSelected = %d before category change, want 1", app.ItemSelected)
+	if app.RowSelected != 1 {
+		t.Fatalf("RowSelected = %d before category change, want 1", app.RowSelected)
 	}
 
 	if err := app.categoryMoveDown(nil, nil); err != nil {
 		t.Fatalf("categoryMoveDown: %v", err)
 	}
-	if app.ItemSelected != 0 {
-		t.Errorf("ItemSelected = %d after categoryMoveDown, want reset to 0", app.ItemSelected)
+	if app.RowSelected != 0 {
+		t.Errorf("RowSelected = %d after categoryMoveDown, want reset to 0", app.RowSelected)
+	}
+}
+
+func TestCollapseSurvivesRescan(t *testing.T) {
+	dir := t.TempDir()
+	subdir := filepath.Join(dir, "sub")
+	if err := os.Mkdir(subdir, 0o755); err != nil {
+		t.Fatalf("mkdir sub: %v", err)
+	}
+	if err := os.WriteFile(filepath.Join(subdir, "a.go"), []byte("// TODO: one\n"), 0o644); err != nil {
+		t.Fatalf("seed fixture: %v", err)
+	}
+
+	app := newTestApp(t, dir)
+	app.collapsed["sub"] = true
+
+	before := len(app.visibleRows())
+	if err := app.rescan(nil, nil); err != nil {
+		t.Fatalf("rescan: %v", err)
+	}
+	after := len(app.visibleRows())
+
+	if before != after {
+		t.Fatalf("visibleRows changed across rescan (%d -> %d), want collapse state preserved", before, after)
+	}
+	if !app.collapsed["sub"] {
+		t.Errorf("collapsed[\"sub\"] = false after rescan, want still collapsed")
+	}
+}
+
+func TestCollapseSurvivesCategorySwitch(t *testing.T) {
+	dir := t.TempDir()
+	subdir := filepath.Join(dir, "sub")
+	if err := os.Mkdir(subdir, 0o755); err != nil {
+		t.Fatalf("mkdir sub: %v", err)
+	}
+	content := "// TODO: one\n// FIXME: two\n"
+	if err := os.WriteFile(filepath.Join(subdir, "a.go"), []byte(content), 0o644); err != nil {
+		t.Fatalf("seed fixture: %v", err)
+	}
+
+	app := newTestApp(t, dir)
+	app.collapsed["sub"] = true
+
+	if err := app.categoryMoveDown(nil, nil); err != nil {
+		t.Fatalf("categoryMoveDown: %v", err)
+	}
+	if err := app.categoryMoveUp(nil, nil); err != nil {
+		t.Fatalf("categoryMoveUp: %v", err)
+	}
+
+	if !app.collapsed["sub"] {
+		t.Errorf("collapsed[\"sub\"] = false after switching category and back, want still collapsed")
+	}
+}
+
+func TestActivateSelectedRowDirTogglesCollapse(t *testing.T) {
+	dir := t.TempDir()
+	subdir := filepath.Join(dir, "sub")
+	if err := os.Mkdir(subdir, 0o755); err != nil {
+		t.Fatalf("mkdir sub: %v", err)
+	}
+	if err := os.WriteFile(filepath.Join(subdir, "a.go"), []byte("// TODO: one\n"), 0o644); err != nil {
+		t.Fatalf("seed fixture: %v", err)
+	}
+
+	app := newTestApp(t, dir)
+	rows := app.visibleRows()
+	if len(rows) == 0 || rows[0].kind != rowKindDir {
+		t.Fatalf("visibleRows[0] = %+v, want a dir row", rows)
+	}
+	app.RowSelected = 0
+
+	if err := app.activateSelectedRow(nil, nil); err != nil {
+		t.Fatalf("activateSelectedRow: %v", err)
+	}
+	if !app.collapsed[rows[0].path] {
+		t.Errorf("collapsed[%q] = false after activateSelectedRow on a dir row, want true", rows[0].path)
+	}
+	if app.pendingEdit != nil {
+		t.Errorf("pendingEdit = %+v after toggling a dir row, want nil", app.pendingEdit)
+	}
+}
+
+func TestActivateSelectedRowItemOpensEditor(t *testing.T) {
+	dir := t.TempDir()
+	if err := os.WriteFile(filepath.Join(dir, "main.go"), []byte("// TODO: one\n"), 0o644); err != nil {
+		t.Fatalf("seed fixture: %v", err)
+	}
+
+	app := newTestApp(t, dir)
+	rows := app.visibleRows()
+	itemIdx := -1
+	for i, r := range rows {
+		if r.kind == rowKindItem {
+			itemIdx = i
+			break
+		}
+	}
+	if itemIdx < 0 {
+		t.Fatalf("visibleRows = %+v, want at least one item row", rows)
+	}
+	app.RowSelected = itemIdx
+
+	err := app.activateSelectedRow(nil, nil)
+	if !errors.Is(err, errOpenEditor) {
+		t.Fatalf("activateSelectedRow on item row error = %v, want errOpenEditor", err)
+	}
+	if app.pendingEdit == nil {
+		t.Fatalf("pendingEdit = nil after activateSelectedRow on item row, want set")
 	}
 }

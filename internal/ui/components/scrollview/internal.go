@@ -59,7 +59,6 @@ func (v *View) renderWidth(contentView *gocui.View) int {
 	}
 
 	width, _ := contentView.Size()
-	width -= v.scrollbarWidth
 	if width < 1 {
 		return 1
 	}

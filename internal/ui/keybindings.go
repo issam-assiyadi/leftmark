@@ -48,12 +48,13 @@ func (a *App) BindKeys(g *gocui.Gui) error {
 		key interface{}
 		fn  func(*gocui.Gui, *gocui.View) error
 	}{
-		{gocui.KeyArrowDown, a.itemMoveDown},
-		{'j', a.itemMoveDown},
-		{gocui.KeyArrowUp, a.itemMoveUp},
-		{'k', a.itemMoveUp},
-		{gocui.KeyEnter, a.openSelectedInEditor},
-		{'o', a.openSelectedInEditor},
+		{gocui.KeyArrowDown, a.rowMoveDown},
+		{'j', a.rowMoveDown},
+		{gocui.KeyArrowUp, a.rowMoveUp},
+		{'k', a.rowMoveUp},
+		{gocui.KeyEnter, a.activateSelectedRow},
+		{'o', a.activateSelectedRow},
+		{gocui.KeySpace, a.activateSelectedRow},
 	}
 	for _, viewname := range []string{a.Content.WrapperName(), a.Content.ContentViewName(), a.Content.ScrollViewName()} {
 		if err := g.SetKeybinding(viewname, gocui.MouseLeft, gocui.ModNone, a.focusItems); err != nil {
@@ -88,7 +89,7 @@ func (a *App) focusItems(g *gocui.Gui, v *gocui.View) error {
 func (a *App) categoryMoveDown(g *gocui.Gui, v *gocui.View) error {
 	if a.CategorySelected < len(categoryOrder)-1 {
 		a.CategorySelected++
-		a.ItemSelected = 0
+		a.RowSelected = 0
 	}
 	return nil
 }
@@ -96,22 +97,34 @@ func (a *App) categoryMoveDown(g *gocui.Gui, v *gocui.View) error {
 func (a *App) categoryMoveUp(g *gocui.Gui, v *gocui.View) error {
 	if a.CategorySelected > 0 {
 		a.CategorySelected--
-		a.ItemSelected = 0
+		a.RowSelected = 0
 	}
 	return nil
 }
 
-func (a *App) itemMoveDown(g *gocui.Gui, v *gocui.View) error {
-	if a.ItemSelected < len(a.currentCategoryItems())-1 {
-		a.ItemSelected++
+func (a *App) rowMoveDown(g *gocui.Gui, v *gocui.View) error {
+	if a.RowSelected < len(a.visibleRows())-1 {
+		a.RowSelected++
 	}
 	return nil
 }
 
-func (a *App) itemMoveUp(g *gocui.Gui, v *gocui.View) error {
-	if a.ItemSelected > 0 {
-		a.ItemSelected--
+func (a *App) rowMoveUp(g *gocui.Gui, v *gocui.View) error {
+	if a.RowSelected > 0 {
+		a.RowSelected--
 	}
+	return nil
+}
+
+func (a *App) activateSelectedRow(g *gocui.Gui, v *gocui.View) error {
+	r, ok := a.selectedRow()
+	if !ok {
+		return nil
+	}
+	if r.kind == rowKindItem {
+		return a.openSelectedInEditor(g, v)
+	}
+	a.collapsed[r.path] = !a.collapsed[r.path]
 	return nil
 }
 
