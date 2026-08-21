@@ -23,7 +23,7 @@ func (v *View) SetTitle(g *gocui.Gui, title string) error {
 	return nil
 }
 
-func (v *View) Render(g *gocui.Gui, renderFn func(*gocui.View, int) error) error {
+func (v *View) Render(g *gocui.Gui, focus int, renderFn func(*gocui.View, int) error) error {
 	if v == nil || g == nil {
 		return nil
 	}
@@ -34,15 +34,17 @@ func (v *View) Render(g *gocui.Gui, renderFn func(*gocui.View, int) error) error
 	}
 
 	scrollView, err := v.scrollView(g)
-	if err != nil || scrollView == nil {
+	if err != nil {
 		return err
 	}
 
 	contentView.Clear()
-	scrollView.Clear()
 
-	if err := scrollView.SetOrigin(0, 0); err != nil {
-		return err
+	if scrollView != nil {
+		scrollView.Clear()
+		if err := scrollView.SetOrigin(0, 0); err != nil {
+			return err
+		}
 	}
 
 	if renderFn != nil {
@@ -51,7 +53,47 @@ func (v *View) Render(g *gocui.Gui, renderFn func(*gocui.View, int) error) error
 		}
 	}
 
+	if err := v.ensureVisible(contentView, focus); err != nil {
+		return err
+	}
+
+	if scrollView == nil {
+		return nil
+	}
+
 	return v.renderScrollbar(contentView, scrollView)
+}
+
+func (v *View) ensureVisible(contentView *gocui.View, focus int) error {
+	if contentView == nil || focus < 0 {
+		return nil
+	}
+
+	_, height := contentView.Size()
+	if height <= 0 {
+		return nil
+	}
+
+	originX, originY := contentView.Origin()
+	newOriginY := originY
+	if focus < newOriginY {
+		newOriginY = focus
+	} else if focus >= newOriginY+height {
+		newOriginY = focus - height + 1
+	}
+
+	if maxOrigin := v.maxOrigin(contentView); newOriginY > maxOrigin {
+		newOriginY = maxOrigin
+	}
+	if newOriginY < 0 {
+		newOriginY = 0
+	}
+
+	if newOriginY == originY {
+		return nil
+	}
+
+	return contentView.SetOrigin(originX, newOriginY)
 }
 
 func (v *View) renderScrollbar(contentView, scrollView *gocui.View) error {

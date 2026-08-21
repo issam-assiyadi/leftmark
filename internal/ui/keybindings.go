@@ -23,6 +23,12 @@ func (a *App) BindKeys(g *gocui.Gui) error {
 		}
 	}
 
+	for _, viewname := range []string{a.Categories.WrapperName(), a.Categories.ContentViewName()} {
+		if err := g.SetKeybinding(viewname, gocui.MouseLeft, gocui.ModNone, a.focusCategories); err != nil {
+			return err
+		}
+	}
+
 	categoryKeys := []struct {
 		key interface{}
 		fn  func(*gocui.Gui, *gocui.View) error
@@ -31,10 +37,9 @@ func (a *App) BindKeys(g *gocui.Gui) error {
 		{'j', a.categoryMoveDown},
 		{gocui.KeyArrowUp, a.categoryMoveUp},
 		{'k', a.categoryMoveUp},
-		{gocui.MouseLeft, a.focusCategories},
 	}
 	for _, b := range categoryKeys {
-		if err := g.SetKeybinding(a.CategoriesView, b.key, gocui.ModNone, b.fn); err != nil {
+		if err := g.SetKeybinding(a.Categories.WrapperName(), b.key, gocui.ModNone, b.fn); err != nil {
 			return err
 		}
 	}
@@ -69,7 +74,7 @@ func quit(g *gocui.Gui, v *gocui.View) error {
 }
 
 func (a *App) focusCategories(g *gocui.Gui, v *gocui.View) error {
-	a.focused = a.CategoriesView
+	a.focused = a.Categories.WrapperName()
 	_, err := g.SetCurrentView(a.focused)
 	return err
 }
