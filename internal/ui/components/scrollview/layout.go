@@ -15,7 +15,10 @@ func (v *View) Layout(g *gocui.Gui, x0, y0, x1, y1 int) error {
 		return err
 	}
 	if err == gocui.ErrUnknownView {
-		wrapper.Title = v.title
+		wrapper.Frame = false
+	}
+	if err := drawRoundedFrame(g, wrapper, x0, y0, x1, y1, v.title); err != nil {
+		return err
 	}
 
 	contentLeft := x0 + 1
