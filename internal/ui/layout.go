@@ -22,15 +22,13 @@ func (a *App) layout(g *gocui.Gui) error {
 		sidebarWidth = 2
 	}
 
-	sv, err := g.SetView(a.SidebarView, 0, 0, sidebarWidth-1, maxY-1)
+	sv, err := g.SetView(a.CategoriesView, 0, 0, sidebarWidth-1, maxY-1)
 	if err != nil && err != gocui.ErrUnknownView {
 		return err
 	}
 	if err == gocui.ErrUnknownView {
-		sv.Title = "Items"
-		sv.Highlight = true
-		sv.SelBgColor = gocui.ColorGreen
-		sv.Wrap = true
+		sv.Title = " [1] Categories "
+		sv.Wrap = false
 	}
 
 	contentLeft := sidebarWidth

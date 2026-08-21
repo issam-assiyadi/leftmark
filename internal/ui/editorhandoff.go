@@ -7,11 +7,6 @@ import (
 	"github.com/jroimartin/gocui"
 )
 
-// errOpenEditor is returned by a keybinding handler to make gocui's
-// MainLoop return immediately, giving Run a clean point to close the Gui,
-// shell out to $EDITOR with full terminal control, and reopen a fresh Gui
-// afterward. jroimartin/gocui v0.5.0 has no suspend/resume API, so this
-// close/run/reopen loop is the mechanism, not a stopgap.
 var errOpenEditor = errors.New("ui: open in editor")
 
 func (a *App) Run() error {
@@ -20,6 +15,10 @@ func (a *App) Run() error {
 		if err != nil {
 			return err
 		}
+
+		g.Mouse = true
+		g.Highlight = true
+		g.SelFgColor = gocui.ColorCyan
 
 		g.SetManagerFunc(func(g *gocui.Gui) error {
 			if err := a.layout(g); err != nil {
@@ -33,7 +32,15 @@ func (a *App) Run() error {
 			return err
 		}
 
-		if _, err := g.SetCurrentView(a.SidebarView); err != nil {
+		// Views only come into existence once the manager func runs, which
+		// gocui otherwise defers to the first MainLoop iteration. Run it here
+		// so the categories view already exists by the time we focus it —
+		// per-view keybindings never fire while g.currentView is nil.
+		if err := a.layout(g); err != nil {
+			g.Close()
+			return err
+		}
+		if _, err := g.SetCurrentView(a.focused); err != nil {
 			log.Println("unable to set initial view:", err)
 		}
 

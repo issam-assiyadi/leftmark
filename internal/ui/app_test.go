@@ -6,6 +6,7 @@ import (
 	"testing"
 
 	"github.com/issam-assiyadi/leftmark"
+	"github.com/issam-assiyadi/leftmark/domain"
 )
 
 func newTestApp(t *testing.T, dir string) *App {
@@ -28,6 +29,9 @@ func TestNewScansOnStartup(t *testing.T) {
 	app := newTestApp(t, dir)
 	if len(app.Items) != 1 || app.Items[0].Text != "fix this" {
 		t.Fatalf("initial Items = %+v, want one TODO item", app.Items)
+	}
+	if got := app.itemsByCategory[domain.KindTODO]; len(got) != 1 || got[0].Text != "fix this" {
+		t.Fatalf("itemsByCategory[TODO] = %+v, want one TODO item", got)
 	}
 }
 
@@ -52,9 +56,34 @@ func TestRescanPicksUpChanges(t *testing.T) {
 	if len(app.Items) != 2 {
 		t.Fatalf("Items after rescan = %+v, want 2", app.Items)
 	}
+	if len(app.itemsByCategory[domain.KindTODO]) != 1 || len(app.itemsByCategory[domain.KindFIXME]) != 1 {
+		t.Fatalf("itemsByCategory after rescan = %+v, want one TODO and one FIXME", app.itemsByCategory)
+	}
 }
 
-func TestMoveUpDownClampToItemBounds(t *testing.T) {
+func TestCategoryMoveUpDownClampToCategoryBounds(t *testing.T) {
+	dir := t.TempDir()
+
+	app := newTestApp(t, dir)
+
+	if err := app.categoryMoveUp(nil, nil); err != nil {
+		t.Fatalf("categoryMoveUp: %v", err)
+	}
+	if app.CategorySelected != 0 {
+		t.Errorf("CategorySelected = %d after categoryMoveUp at top, want clamped to 0", app.CategorySelected)
+	}
+
+	for i := 0; i < len(categoryOrder)+2; i++ {
+		if err := app.categoryMoveDown(nil, nil); err != nil {
+			t.Fatalf("categoryMoveDown: %v", err)
+		}
+	}
+	if app.CategorySelected != len(categoryOrder)-1 {
+		t.Errorf("CategorySelected = %d after moving past the end, want clamped to %d", app.CategorySelected, len(categoryOrder)-1)
+	}
+}
+
+func TestItemMoveUpDownClampToItemBounds(t *testing.T) {
 	dir := t.TempDir()
 	mainGo := filepath.Join(dir, "main.go")
 	content := "// TODO: one\n// TODO: two\n// TODO: three\n"
@@ -63,23 +92,47 @@ func TestMoveUpDownClampToItemBounds(t *testing.T) {
 	}
 
 	app := newTestApp(t, dir)
-	if len(app.Items) != 3 {
-		t.Fatalf("Items = %+v, want 3", app.Items)
+	items := app.currentCategoryItems()
+	if len(items) != 3 {
+		t.Fatalf("currentCategoryItems = %+v, want 3", items)
 	}
 
-	if err := app.moveUp(nil, nil); err != nil {
-		t.Fatalf("moveUp: %v", err)
+	if err := app.itemMoveUp(nil, nil); err != nil {
+		t.Fatalf("itemMoveUp: %v", err)
 	}
-	if app.Selected != 0 {
-		t.Errorf("Selected = %d after moveUp at top, want clamped to 0", app.Selected)
+	if app.ItemSelected != 0 {
+		t.Errorf("ItemSelected = %d after itemMoveUp at top, want clamped to 0", app.ItemSelected)
 	}
 
 	for i := 0; i < 5; i++ {
-		if err := app.moveDown(nil, nil); err != nil {
-			t.Fatalf("moveDown: %v", err)
+		if err := app.itemMoveDown(nil, nil); err != nil {
+			t.Fatalf("itemMoveDown: %v", err)
 		}
 	}
-	if app.Selected != len(app.Items)-1 {
-		t.Errorf("Selected = %d after moving past the end, want clamped to %d", app.Selected, len(app.Items)-1)
+	if app.ItemSelected != len(items)-1 {
+		t.Errorf("ItemSelected = %d after moving past the end, want clamped to %d", app.ItemSelected, len(items)-1)
+	}
+}
+
+func TestCategoryMoveResetsItemSelection(t *testing.T) {
+	dir := t.TempDir()
+	content := "// TODO: one\n// TODO: two\n// FIXME: three\n"
+	if err := os.WriteFile(filepath.Join(dir, "main.go"), []byte(content), 0o644); err != nil {
+		t.Fatalf("seed fixture: %v", err)
+	}
+
+	app := newTestApp(t, dir)
+	if err := app.itemMoveDown(nil, nil); err != nil {
+		t.Fatalf("itemMoveDown: %v", err)
+	}
+	if app.ItemSelected != 1 {
+		t.Fatalf("ItemSelected = %d before category change, want 1", app.ItemSelected)
+	}
+
+	if err := app.categoryMoveDown(nil, nil); err != nil {
+		t.Fatalf("categoryMoveDown: %v", err)
+	}
+	if app.ItemSelected != 0 {
+		t.Errorf("ItemSelected = %d after categoryMoveDown, want reset to 0", app.ItemSelected)
 	}
 }

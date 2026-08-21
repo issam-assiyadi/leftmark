@@ -19,7 +19,7 @@ func (v *View) Layout(g *gocui.Gui, x0, y0, x1, y1 int) error {
 	}
 
 	contentLeft := x0 + 1
-	contentTop := y0 + 1
+	contentTop := y0
 	contentRight := x1 - v.scrollbarWidth - 1
 	contentBottom := y1 - 1
 	scrollLeft := x1 - v.scrollbarWidth + 1
