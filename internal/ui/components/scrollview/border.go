@@ -71,6 +71,10 @@ func drawRoundedFrame(g *gocui.Gui, v *gocui.View, x0, y0, x1, y1 int, title str
 	}
 
 	if title != "" && y0 >= 0 && y0 < maxY {
+		titleFgColor := fgColor
+		if g.Highlight && g.CurrentView() == v {
+			titleFgColor |= gocui.AttrBold
+		}
 		for i, ch := range title {
 			x := x0 + i + 2
 			if x < 0 {
@@ -78,7 +82,7 @@ func drawRoundedFrame(g *gocui.Gui, v *gocui.View, x0, y0, x1, y1 int, title str
 			} else if x > x1-2 || x >= maxX {
 				break
 			}
-			if err := g.SetRune(x, y0, ch, fgColor, bgColor); err != nil {
+			if err := g.SetRune(x, y0, ch, titleFgColor, bgColor); err != nil {
 				return err
 			}
 		}
@@ -96,4 +100,20 @@ func frameColors(g *gocui.Gui, v *gocui.View) (gocui.Attribute, gocui.Attribute)
 		return g.SelFgColor, g.SelBgColor
 	}
 	return g.FgColor, g.BgColor
+}
+
+// FocusFgColor returns the foreground color this pane's border and
+// scrollbar are currently drawn with, so other elements tied to this
+// pane (such as its selected row) can share the same focus/unfocused
+// accent instead of hardcoding their own colors.
+func (v *View) FocusFgColor(g *gocui.Gui) gocui.Attribute {
+	if v == nil || g == nil {
+		return gocui.ColorDefault
+	}
+	wrapper, err := g.View(v.wrapperViewName)
+	if err != nil {
+		return gocui.ColorDefault
+	}
+	fgColor, _ := frameColors(g, wrapper)
+	return fgColor
 }
