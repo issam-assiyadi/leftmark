@@ -9,16 +9,37 @@ import (
 	"github.com/issam-assiyadi/leftmark/domain"
 )
 
+const rowStyleReset = "\x1b[0m"
+
+// selectedRowStyle marks a row as selected with bold + reverse video,
+// tinted with fgColor beforehand — the same accent frameColors gives
+// this pane's border/scrollbar, so the highlight reads as "active"
+// (accent-tinted) or "inactive" (theme-default) the same way they do.
+// Reverse video does the contrast work, so the highlight still adapts
+// to dark, light, or transparent terminal themes rather than assuming
+// one. fgColor must come before bold/reverse: gocui's escape parser
+// assigns fg/bg colors outright (rather than OR-ing them in), so
+// setting it after bold/reverse would wipe those bits back out.
+func selectedRowStyle(fgColor gocui.Attribute) string {
+	code := 39
+	if fgColor != gocui.ColorDefault {
+		code = 30 + int(fgColor) - 1
+	}
+	return fmt.Sprintf("\x1b[%d;1;7m", code)
+}
+
 func (a *App) Render(g *gocui.Gui) error {
+	categoryStyle := selectedRowStyle(a.Categories.FocusFgColor(g))
 	if err := a.Categories.Render(g, a.CategorySelected, func(v *gocui.View, contentWidth int) error {
 		rowWidth := contentWidth - len("  ")
 		for i, kind := range categoryOrder {
-			prefix := "  "
-			if i == a.CategorySelected {
-				prefix = "> "
-			}
 			count := len(a.itemsByCategory[kind])
-			_, _ = fmt.Fprintln(v, prefix+formatCategoryRow(rowWidth, kind, count))
+			row := "  " + formatCategoryRow(rowWidth, kind, count)
+			if i == a.CategorySelected {
+				_, _ = fmt.Fprintf(v, "%s%s%s\n", categoryStyle, row, rowStyleReset)
+			} else {
+				_, _ = fmt.Fprintln(v, row)
+			}
 		}
 		return nil
 	}); err != nil {
@@ -35,17 +56,22 @@ func (a *App) Render(g *gocui.Gui) error {
 		focus = -1
 	}
 
+	itemStyle := selectedRowStyle(a.Content.FocusFgColor(g))
 	return a.Content.Render(g, focus, func(v *gocui.View, contentWidth int) error {
 		if len(items) == 0 {
 			_, _ = fmt.Fprintln(v, "No items in this category")
 			return nil
 		}
 		for i, item := range items {
-			prefix := "  "
+			line := "  " + renderItemRow(item)
 			if i == a.ItemSelected {
-				prefix = "> "
+				if pad := contentWidth - len(line); pad > 0 {
+					line += strings.Repeat(" ", pad)
+				}
+				_, _ = fmt.Fprintf(v, "%s%s%s\n", itemStyle, line, rowStyleReset)
+			} else {
+				_, _ = fmt.Fprintln(v, line)
 			}
-			_, _ = fmt.Fprintln(v, prefix+renderItemRow(item))
 		}
 		return nil
 	})

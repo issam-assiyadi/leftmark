@@ -15,7 +15,11 @@ func (v *View) Layout(g *gocui.Gui, x0, y0, x1, y1 int) error {
 		return err
 	}
 	if err == gocui.ErrUnknownView {
+		wrapper.Frame = false
 		wrapper.Title = v.title
+	}
+	if err := drawRoundedFrame(g, wrapper, x0, y0, x1, y1, wrapper.Title); err != nil {
+		return err
 	}
 
 	contentLeft := x0 + 1
@@ -61,9 +65,9 @@ func (v *View) Layout(g *gocui.Gui, x0, y0, x1, y1 int) error {
 	if err == gocui.ErrUnknownView {
 		scrollView.Frame = false
 		scrollView.Wrap = false
-		scrollView.FgColor = gocui.ColorWhite
 		scrollView.BgColor = gocui.ColorDefault
 	}
+	scrollView.FgColor, _ = frameColors(g, wrapper)
 
 	return nil
 }

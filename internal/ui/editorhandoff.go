@@ -21,10 +21,14 @@ func (a *App) Run() error {
 		g.SelFgColor = gocui.ColorCyan
 
 		g.SetManagerFunc(func(g *gocui.Gui) error {
-			if err := a.layout(g); err != nil {
+			// Render before layout: Render() is what updates each pane's
+			// title (e.g. the "- <category>" suffix), and layout draws
+			// the border/title using the view's *current* title. Drawing
+			// first would render last frame's title, one step behind.
+			if err := a.Render(g); err != nil {
 				return err
 			}
-			return a.Render(g)
+			return a.layout(g)
 		})
 
 		if err := a.BindKeys(g); err != nil {
