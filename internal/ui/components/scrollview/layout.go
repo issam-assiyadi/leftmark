@@ -64,9 +64,9 @@ func (v *View) Layout(g *gocui.Gui, x0, y0, x1, y1 int) error {
 	if err == gocui.ErrUnknownView {
 		scrollView.Frame = false
 		scrollView.Wrap = false
-		scrollView.FgColor = gocui.ColorWhite
 		scrollView.BgColor = gocui.ColorDefault
 	}
+	scrollView.FgColor, _ = frameColors(g, wrapper)
 
 	return nil
 }

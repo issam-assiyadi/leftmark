@@ -20,10 +20,7 @@ const (
 func drawRoundedFrame(g *gocui.Gui, v *gocui.View, x0, y0, x1, y1 int, title string) error {
 	maxX, maxY := g.Size()
 
-	fgColor, bgColor := g.FgColor, g.BgColor
-	if g.Highlight && g.CurrentView() == v {
-		fgColor, bgColor = g.SelFgColor, g.SelBgColor
-	}
+	fgColor, bgColor := frameColors(g, v)
 
 	for x := x0 + 1; x < x1 && x < maxX; x++ {
 		if x < 0 {
@@ -88,4 +85,15 @@ func drawRoundedFrame(g *gocui.Gui, v *gocui.View, x0, y0, x1, y1 int, title str
 	}
 
 	return nil
+}
+
+// frameColors returns the color pair a bordered view (or anything
+// visually tied to it, such as its scrollbar) should be drawn with:
+// the selection colors while it holds focus, the default frame
+// colors otherwise.
+func frameColors(g *gocui.Gui, v *gocui.View) (gocui.Attribute, gocui.Attribute) {
+	if g.Highlight && g.CurrentView() == v {
+		return g.SelFgColor, g.SelBgColor
+	}
+	return g.FgColor, g.BgColor
 }
