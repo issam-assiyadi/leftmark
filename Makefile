@@ -1,4 +1,4 @@
-.PHONY: fmt fmt-check vet lint test check
+.PHONY: fmt fmt-check vet lint test check-demos check
 
 GOFILES := $(shell find . -type f -name '*.go' -not -path './.cache/*')
 CACHE_DIR := $(CURDIR)/.cache
@@ -20,4 +20,7 @@ lint:
 test:
 	./scripts/test.sh $(GO_CACHE)
 
-check: fmt-check vet lint test
+check-demos:
+	./scripts/check-demos.sh
+
+check: fmt-check vet lint test check-demos
