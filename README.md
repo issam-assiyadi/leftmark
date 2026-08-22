@@ -16,6 +16,16 @@ In short:
 
 `leftmark` is the scan/report engine plus a set of presentation layers on top of it. The first client is a terminal app, but the engine is built so a VS Code extension, an editor plugin, or other front-ends can be added later without changing how items are scanned.
 
+## Demos
+
+### TUI
+
+<video src="docs/demos/tui.mov" controls></video>
+
+### CLI
+
+Coming soon.
+
 ## How it works
 
 1. **Scan.** `leftmark` walks your project (respecting `.gitignore`) looking for `TODO`, `FIXME`, `NOTE`, and `QUESTION` comments, in any language. Every scan is fresh: nothing is written back to your source and nothing persists between runs.
