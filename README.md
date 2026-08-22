@@ -20,7 +20,7 @@ In short:
 
 ### TUI
 
-<video src="docs/demos/tui.mov" controls></video>
+![TUI demo](docs/demos/tui-demo.gif)
 
 ### CLI
 
