@@ -1,6 +1,6 @@
 package scrollview
 
-import "github.com/jroimartin/gocui"
+import "github.com/awesome-gocui/gocui"
 
 func (v *View) contentView(g *gocui.Gui) (*gocui.View, error) {
 	if v == nil || g == nil {

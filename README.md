@@ -19,7 +19,7 @@ In short:
 ## How it works
 
 1. **Scan.** `leftmark` walks your project (respecting `.gitignore`) looking for `TODO`, `FIXME`, `NOTE`, and `QUESTION` comments, in any language. Every scan is fresh: nothing is written back to your source and nothing persists between runs.
-2. **Browse.** A dashboard lists everything the last scan found, lets you move through items, jump straight to the file and line in your editor, and rescan on demand. The first dashboard is a terminal app; other front-ends can present the same scanned items later.
+2. **Browse.** A dashboard lists everything the last scan found, lets you move through items, open an in-app syntax-highlighted preview of the file at that line, and rescan on demand. The first dashboard is a terminal app; other front-ends can present the same scanned items later.
 3. **Report.** An optional, informational-only git hook prints a count of items by kind at commit or push time. It never blocks, it's just a nudge.
 
 ## Product direction
@@ -28,7 +28,7 @@ In short:
 - no persistence layer: the source tree is scanned fresh every time, there's nothing external to keep in sync
 - multi-language support via a lightweight comment-syntax table, not a full parser per language
 - git hooks are informational by default; blocking/enforcement modes are a later, opt-in step
-- editing still happens in the user's own editor: `leftmark` opens `$EDITOR` at the right file:line, it doesn't try to be one
+- browsing includes an in-app, read-only, syntax-highlighted preview of the file at the marker's line; `leftmark` doesn't shell out to an editor
 - the scan/report engine is kept independent of any single presentation layer, so the terminal app, and any front-end added later, are just clients built on top of it
 
 ## Quality checks

@@ -1,6 +1,6 @@
 package ui
 
-import "github.com/jroimartin/gocui"
+import "github.com/awesome-gocui/gocui"
 
 func (a *App) layout(g *gocui.Gui) error {
 	maxX, maxY := g.Size()
@@ -30,9 +30,11 @@ func (a *App) layout(g *gocui.Gui) error {
 	contentTop := 0
 	contentRight := maxX - 1
 	contentBottom := maxY - 1
-	if contentLeft >= contentRight || contentTop >= contentBottom {
-		return nil
+	if contentLeft < contentRight && contentTop < contentBottom {
+		if err := a.Content.Layout(g, contentLeft, contentTop, contentRight, contentBottom); err != nil {
+			return err
+		}
 	}
 
-	return a.Content.Layout(g, contentLeft, contentTop, contentRight, contentBottom)
+	return a.Preview.Layout(g, maxX, maxY)
 }

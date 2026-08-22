@@ -1,6 +1,6 @@
 package scrollview
 
-import "github.com/jroimartin/gocui"
+import "github.com/awesome-gocui/gocui"
 
 func (v *View) ScrollDown(g *gocui.Gui) error {
 	contentView, err := v.contentView(g)
@@ -39,4 +39,14 @@ func (v *View) JumpTop(g *gocui.Gui) error {
 
 	ox, _ := contentView.Origin()
 	return contentView.SetOrigin(ox, 0)
+}
+
+func (v *View) JumpBottom(g *gocui.Gui) error {
+	contentView, err := v.contentView(g)
+	if err != nil || contentView == nil {
+		return err
+	}
+
+	ox, _ := contentView.Origin()
+	return contentView.SetOrigin(ox, v.maxOrigin(contentView))
 }

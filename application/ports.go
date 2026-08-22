@@ -11,9 +11,3 @@ type FileWalker interface {
 type FileReader interface {
 	Read(path string) ([]byte, error)
 }
-
-// EditorLauncher opens a file at a given line in the user's editor and
-// blocks until the editor exits.
-type EditorLauncher interface {
-	Open(path string, line int) error
-}

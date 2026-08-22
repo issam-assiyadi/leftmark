@@ -3,7 +3,7 @@ package ui
 import (
 	"log"
 
-	"github.com/jroimartin/gocui"
+	"github.com/awesome-gocui/gocui"
 )
 
 func (a *App) BindKeys(g *gocui.Gui) error {
@@ -11,8 +11,8 @@ func (a *App) BindKeys(g *gocui.Gui) error {
 		key interface{}
 		fn  func(*gocui.Gui, *gocui.View) error
 	}{
-		{gocui.KeyCtrlC, quit},
-		{'q', quit},
+		{gocui.KeyCtrlC, a.quit},
+		{'q', a.quit},
 		{'r', a.rescan},
 		{'1', a.focusCategories},
 		{'2', a.focusItems},
@@ -67,20 +67,33 @@ func (a *App) BindKeys(g *gocui.Gui) error {
 		}
 	}
 
+	if err := a.Preview.BindKeys(g, a.closePreview); err != nil {
+		return err
+	}
+
 	return nil
 }
 
-func quit(g *gocui.Gui, v *gocui.View) error {
+func (a *App) quit(g *gocui.Gui, v *gocui.View) error {
+	if a.Preview.IsOpen() {
+		return nil
+	}
 	return gocui.ErrQuit
 }
 
 func (a *App) focusCategories(g *gocui.Gui, v *gocui.View) error {
+	if a.Preview.IsOpen() {
+		return nil
+	}
 	a.focused = a.Categories.WrapperName()
 	_, err := g.SetCurrentView(a.focused)
 	return err
 }
 
 func (a *App) focusItems(g *gocui.Gui, v *gocui.View) error {
+	if a.Preview.IsOpen() {
+		return nil
+	}
 	a.focused = a.Content.WrapperName()
 	_, err := g.SetCurrentView(a.focused)
 	return err
@@ -122,22 +135,16 @@ func (a *App) activateSelectedRow(g *gocui.Gui, v *gocui.View) error {
 		return nil
 	}
 	if r.kind == rowKindItem {
-		return a.openSelectedInEditor(g, v)
+		return a.openSelectedInPreview(g, v)
 	}
 	a.collapsed[r.path] = !a.collapsed[r.path]
 	return nil
 }
 
-func (a *App) openSelectedInEditor(g *gocui.Gui, v *gocui.View) error {
-	item, ok := a.selectedItem()
-	if !ok {
+func (a *App) rescan(g *gocui.Gui, v *gocui.View) error {
+	if a.Preview.IsOpen() {
 		return nil
 	}
-	a.pendingEdit = &item
-	return errOpenEditor
-}
-
-func (a *App) rescan(g *gocui.Gui, v *gocui.View) error {
 	items, err := a.Service.Scan()
 	if err != nil {
 		log.Println("scan:", err)
