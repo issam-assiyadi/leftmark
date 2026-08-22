@@ -5,11 +5,17 @@ import (
 	"strings"
 
 	"github.com/jroimartin/gocui"
+	"github.com/mattn/go-runewidth"
 
 	"github.com/issam-assiyadi/leftmark/domain"
 )
 
 const rowStyleReset = "\x1b[0m"
+
+// fileRowStyle marks a file row bold so it stands out from the directory
+// rows above it and the item rows nested under it, without assuming
+// anything about the terminal's color scheme.
+const fileRowStyle = "\x1b[1m"
 
 // selectedRowStyle marks a row as selected with bold + reverse video,
 // tinted with fgColor beforehand — the same accent frameColors gives
@@ -46,39 +52,36 @@ func (a *App) Render(g *gocui.Gui) error {
 		return err
 	}
 
-	items := a.currentCategoryItems()
+	rows := a.visibleRows()
 	if err := a.Content.SetTitle(g, fmt.Sprintf(" [2] Items - %s ", a.currentCategory())); err != nil {
 		return err
 	}
 
-	focus := a.ItemSelected
-	if len(items) == 0 {
+	focus := a.RowSelected
+	if len(rows) == 0 {
 		focus = -1
 	}
 
 	itemStyle := selectedRowStyle(a.Content.FocusFgColor(g))
 	return a.Content.Render(g, focus, func(v *gocui.View, contentWidth int) error {
-		if len(items) == 0 {
+		if len(rows) == 0 {
 			_, _ = fmt.Fprintln(v, "No items in this category")
 			return nil
 		}
-		for i, item := range items {
-			line := "  " + renderItemRow(item)
-			if i == a.ItemSelected {
-				if pad := contentWidth - len(line); pad > 0 {
-					line += strings.Repeat(" ", pad)
-				}
+		for i, r := range rows {
+			line := "  " + formatRow(r, contentWidth-2)
+			switch {
+			case i == a.RowSelected:
+				line = runewidth.FillRight(line, contentWidth)
 				_, _ = fmt.Fprintf(v, "%s%s%s\n", itemStyle, line, rowStyleReset)
-			} else {
+			case r.kind == rowKindFile:
+				_, _ = fmt.Fprintf(v, "%s%s%s\n", fileRowStyle, line, rowStyleReset)
+			default:
 				_, _ = fmt.Fprintln(v, line)
 			}
 		}
 		return nil
 	})
-}
-
-func renderItemRow(item domain.Item) string {
-	return fmt.Sprintf("%s:%d %s", item.File, item.Line, item.Text)
 }
 
 const categoryMetaRightPad = 1

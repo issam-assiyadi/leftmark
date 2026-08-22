@@ -28,7 +28,7 @@ func (v *View) Layout(g *gocui.Gui, x0, y0, x1, y1 int) error {
 
 	contentRight := x1 - 1
 	if !v.hideScrollbar {
-		contentRight = x1 - v.scrollbarWidth - 1
+		contentRight = x1 - v.scrollbarWidth
 	}
 
 	if contentLeft >= contentRight || contentTop >= contentBottom {
@@ -49,7 +49,7 @@ func (v *View) Layout(g *gocui.Gui, x0, y0, x1, y1 int) error {
 		return nil
 	}
 
-	scrollLeft := x1 - v.scrollbarWidth + 1
+	scrollLeft := contentRight
 	scrollTop := y0
 	scrollRight := x1
 	scrollBottom := y1
