@@ -1,11 +1,9 @@
-// Package ui is the gocui terminal dashboard - one client of
-// application.Service among others (see internal/cliadapter), with no
-// knowledge of its own reachable from outside this binary.
 package ui
 
 import (
 	"github.com/issam-assiyadi/leftmark/application"
 	"github.com/issam-assiyadi/leftmark/domain"
+	"github.com/issam-assiyadi/leftmark/internal/ui/components/modal"
 	"github.com/issam-assiyadi/leftmark/internal/ui/components/scrollview"
 )
 
@@ -17,10 +15,6 @@ type App struct {
 	Items           []domain.Item
 	itemsByCategory map[domain.Kind][]domain.Item
 
-	// collapsed tracks which directory/file paths (see row.path) are
-	// collapsed in the content pane's tree. Absent key = expanded, so new
-	// paths default to expanded and collapse choices survive rescan/setItems
-	// without any seeding or reset logic.
 	collapsed map[string]bool
 
 	CategorySelected int
@@ -28,10 +22,12 @@ type App struct {
 
 	Categories *scrollview.View
 	Content    *scrollview.View
+	Preview    *modal.Modal
 
 	focused string
 
-	pendingEdit *domain.Item
+	previewLines     []string
+	previewFocusText string
 }
 
 func New(svc *application.Service) (*App, error) {
@@ -46,6 +42,10 @@ func New(svc *application.Service) (*App, error) {
 		Content: scrollview.New(scrollview.Config{
 			BaseName:       "content",
 			Title:          " [2] Items ",
+			ScrollbarWidth: 3,
+		}),
+		Preview: modal.New(modal.Config{
+			BaseName:       "preview",
 			ScrollbarWidth: 3,
 		}),
 	}

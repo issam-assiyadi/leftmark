@@ -1,7 +1,6 @@
 package ui
 
 import (
-	"errors"
 	"os"
 	"path/filepath"
 	"testing"
@@ -214,14 +213,14 @@ func TestActivateSelectedRowDirTogglesCollapse(t *testing.T) {
 	if !app.collapsed[rows[0].path] {
 		t.Errorf("collapsed[%q] = false after activateSelectedRow on a dir row, want true", rows[0].path)
 	}
-	if app.pendingEdit != nil {
-		t.Errorf("pendingEdit = %+v after toggling a dir row, want nil", app.pendingEdit)
+	if app.Preview.IsOpen() {
+		t.Errorf("Preview.IsOpen() = true after toggling a dir row, want false")
 	}
 }
 
-func TestActivateSelectedRowItemOpensEditor(t *testing.T) {
+func TestActivateSelectedRowItemOpensPreview(t *testing.T) {
 	dir := t.TempDir()
-	if err := os.WriteFile(filepath.Join(dir, "main.go"), []byte("// TODO: one\n"), 0o644); err != nil {
+	if err := os.WriteFile(filepath.Join(dir, "main.go"), []byte("package main\n\n// TODO: one\n"), 0o644); err != nil {
 		t.Fatalf("seed fixture: %v", err)
 	}
 
@@ -238,12 +237,28 @@ func TestActivateSelectedRowItemOpensEditor(t *testing.T) {
 		t.Fatalf("visibleRows = %+v, want at least one item row", rows)
 	}
 	app.RowSelected = itemIdx
+	previousFocused := app.focused
 
-	err := app.activateSelectedRow(nil, nil)
-	if !errors.Is(err, errOpenEditor) {
-		t.Fatalf("activateSelectedRow on item row error = %v, want errOpenEditor", err)
+	if err := app.activateSelectedRow(nil, nil); err != nil {
+		t.Fatalf("activateSelectedRow: %v", err)
 	}
-	if app.pendingEdit == nil {
-		t.Fatalf("pendingEdit = nil after activateSelectedRow on item row, want set")
+	if !app.Preview.IsOpen() {
+		t.Fatalf("Preview.IsOpen() = false after activateSelectedRow on an item row, want true")
+	}
+	if len(app.previewLines) == 0 {
+		t.Fatalf("previewLines empty after activateSelectedRow on an item row, want highlighted source lines")
+	}
+	if app.focused != app.Preview.WrapperName() {
+		t.Errorf("focused = %q, want the preview's wrapper view", app.focused)
+	}
+
+	if err := app.closePreview(nil, nil); err != nil {
+		t.Fatalf("closePreview: %v", err)
+	}
+	if app.Preview.IsOpen() {
+		t.Errorf("Preview.IsOpen() = true after closePreview, want false")
+	}
+	if app.focused != previousFocused {
+		t.Errorf("focused = %q after closePreview, want restored to %q", app.focused, previousFocused)
 	}
 }

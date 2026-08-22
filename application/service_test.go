@@ -37,20 +37,8 @@ func (f *fakeFS) Read(path string) ([]byte, error) {
 	return data, nil
 }
 
-// fakeEditor records the last Open call instead of launching anything.
-type fakeEditor struct {
-	openedFile string
-	openedLine int
-}
-
-func (e *fakeEditor) Open(path string, line int) error {
-	e.openedFile = path
-	e.openedLine = line
-	return nil
-}
-
 func newTestService(fs *fakeFS, paths []string) *application.Service {
-	return application.NewService("/repo", &fakeWalker{paths: paths}, fs, &fakeEditor{})
+	return application.NewService("/repo", &fakeWalker{paths: paths}, fs)
 }
 
 func TestScanDetectsMarkersAcrossKinds(t *testing.T) {
@@ -115,5 +103,19 @@ func TestScanSortsByFileThenLine(t *testing.T) {
 	}
 	if items[2].File != "b.go" {
 		t.Errorf("items[2] = %+v, want b.go last", items[2])
+	}
+}
+
+func TestReadFileJoinsRoot(t *testing.T) {
+	fs := newFakeFS()
+	fs.files["/repo/main.go"] = []byte("package main\n")
+	svc := newTestService(fs, nil)
+
+	data, err := svc.ReadFile("main.go")
+	if err != nil {
+		t.Fatalf("ReadFile error: %v", err)
+	}
+	if string(data) != "package main\n" {
+		t.Errorf("ReadFile = %q, want file contents", data)
 	}
 }

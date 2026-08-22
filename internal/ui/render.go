@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/jroimartin/gocui"
+	"github.com/awesome-gocui/gocui"
 	"github.com/mattn/go-runewidth"
 
 	"github.com/issam-assiyadi/leftmark/domain"
@@ -17,19 +17,28 @@ const rowStyleReset = "\x1b[0m"
 // anything about the terminal's color scheme.
 const fileRowStyle = "\x1b[1m"
 
-// selectedRowStyle marks a row as selected with bold + reverse video,
-// tinted with fgColor beforehand — the same accent frameColors gives
-// this pane's border/scrollbar, so the highlight reads as "active"
-// (accent-tinted) or "inactive" (theme-default) the same way they do.
-// Reverse video does the contrast work, so the highlight still adapts
-// to dark, light, or transparent terminal themes rather than assuming
-// one. fgColor must come before bold/reverse: gocui's escape parser
-// assigns fg/bg colors outright (rather than OR-ing them in), so
-// setting it after bold/reverse would wipe those bits back out.
+// basicColorSGR maps gocui's 8 basic color constants to their standard
+// foreground SGR code, the encoding selectedRowStyle needs to write a raw
+// ANSI escape into a view's content. gocui.Attribute packs color,
+// validity, and style bits together rather than storing that code
+// directly, so this is a lookup rather than arithmetic on the value —
+// and only needs to cover the handful of colors this app actually
+// assigns to g.SelFgColor.
+var basicColorSGR = map[gocui.Attribute]int{
+	gocui.ColorBlack:   30,
+	gocui.ColorRed:     31,
+	gocui.ColorGreen:   32,
+	gocui.ColorYellow:  33,
+	gocui.ColorBlue:    34,
+	gocui.ColorMagenta: 35,
+	gocui.ColorCyan:    36,
+	gocui.ColorWhite:   37,
+}
+
 func selectedRowStyle(fgColor gocui.Attribute) string {
-	code := 39
-	if fgColor != gocui.ColorDefault {
-		code = 30 + int(fgColor) - 1
+	code, ok := basicColorSGR[fgColor]
+	if !ok {
+		code = 39
 	}
 	return fmt.Sprintf("\x1b[%d;1;7m", code)
 }
@@ -63,7 +72,7 @@ func (a *App) Render(g *gocui.Gui) error {
 	}
 
 	itemStyle := selectedRowStyle(a.Content.FocusFgColor(g))
-	return a.Content.Render(g, focus, func(v *gocui.View, contentWidth int) error {
+	if err := a.Content.Render(g, focus, func(v *gocui.View, contentWidth int) error {
 		if len(rows) == 0 {
 			_, _ = fmt.Fprintln(v, "No items in this category")
 			return nil
@@ -79,6 +88,24 @@ func (a *App) Render(g *gocui.Gui) error {
 			default:
 				_, _ = fmt.Fprintln(v, line)
 			}
+		}
+		return nil
+	}); err != nil {
+		return err
+	}
+
+	markerStyle := selectedRowStyle(a.Preview.FocusFgColor(g))
+	gutterWidth := previewGutterWidth(len(a.previewLines))
+	focusLine := a.Preview.FocusLine()
+	return a.Preview.Render(g, func(v *gocui.View, contentWidth int) error {
+		for i, line := range a.previewLines {
+			if i != focusLine {
+				_, _ = fmt.Fprintln(v, line)
+				continue
+			}
+			marker := fmt.Sprintf("%*d │ %s", gutterWidth, i+1, a.previewFocusText)
+			marker = runewidth.FillRight(marker, contentWidth)
+			_, _ = fmt.Fprintf(v, "%s%s%s\n", markerStyle, marker, rowStyleReset)
 		}
 		return nil
 	})

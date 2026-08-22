@@ -3,7 +3,7 @@ package scrollview
 import (
 	"fmt"
 
-	"github.com/jroimartin/gocui"
+	"github.com/awesome-gocui/gocui"
 )
 
 func (v *View) SetTitle(g *gocui.Gui, title string) error {
@@ -38,7 +38,15 @@ func (v *View) Render(g *gocui.Gui, focus int, renderFn func(*gocui.View, int) e
 		return err
 	}
 
+	// Clear() resets the view's origin to (0,0) as a side effect, which
+	// would silently undo whatever ScrollUp/ScrollDown/JumpTop set on the
+	// very next render — restore it explicitly, the same way the
+	// scrollbar's origin is reset to a known value below.
+	contentOX, contentOY := contentView.Origin()
 	contentView.Clear()
+	if err := contentView.SetOrigin(contentOX, contentOY); err != nil {
+		return err
+	}
 
 	if scrollView != nil {
 		scrollView.Clear()
